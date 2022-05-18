@@ -6,7 +6,9 @@ const { verifyToken } = require('../middleware/auth')
 
 
 router.post('/google', authController.loginWithGoogle)
+router.post('/refresh-token', authController.handleRefreshToken)
 router.get('/current-user', verifyToken, authController.getCurrentUser)
+router.get('/logout', verifyToken, authController.handleLogout)
 
 
 module.exports = router;

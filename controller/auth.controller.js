@@ -2,17 +2,17 @@ const { google } = require('googleapis')
 const OAuth2 = google.auth.OAuth2
 
 const OAuth2Client = new OAuth2()
-
-const User = require('../model/users.model')
 const jwt = require('jsonwebtoken');
 
+const User = require('../model/users.model')
+const { generateAccessToken, generateRefreshToken } = require('../helper/auth')
 const authController = {
     loginWithGoogle: async(req, res) => {
         try {
             const { accessToken } = req.body
             OAuth2Client.setCredentials({
                 access_token: accessToken,
-                // scope: "https://www.googleapis.com/auth/userinfo.email",
+                // scope: "https://www.googleapis.com/auth/userinfo",
               });
             const oAuth2 = google.oauth2({
                 auth: OAuth2Client,
@@ -26,7 +26,13 @@ const authController = {
                     const user = await User.findOne({email: email})
                     if (user) {
                         // TH đã có dữ liệu trong db 
-                        const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+                        const token = generateAccessToken(user._id)
+                        const refreshToken = generateRefreshToken(user._id)
+                        res.cookie('refreshToken', refreshToken, {
+                            httpOnly: true,
+                            secure: false,
+                            maxAge: 1000 * 60 * 60 * 24 * 7,
+                        })
                         const { fullName, email, avatar } = user
                         return res.json({
                             token,
@@ -36,8 +42,13 @@ const authController = {
                         // Ngược lại, tạo mới 
                         const newUser = new User({email, fullName: name, avatar: picture})
                         const resultSave = await newUser.save()
-
-                        const token = jwt.sign({ userId: resultSave._id }, process.env.JWT_SECRET, { expiresIn: '1h' })
+                        const token = generateAccessToken(resultSave._id)
+                        const refreshToken = generateRefreshToken(resultSave._id)
+                        res.cookie('refreshToken', refreshToken, {
+                            httpOnly: true,
+                            secure: false,
+                            maxAge: 1000 * 60 * 60 * 24 * 7,
+                        })
                         return res.json({
                             token,
                             user: {fullName: name, email, avatar: picture, userId: resultSave._id}
@@ -69,6 +80,43 @@ const authController = {
                 user: data,
                 message: 'success'
             })
+            
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    handleRefreshToken: async(req, res) => {
+        try {
+            const refreshToken = req.cookies.refreshToken
+            if (!refreshToken) return res.status(401).json({message: '401 Unauthorized'})
+            jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET, (err, data) => {
+                if (err) return res.status(403).json({message: '401 Forbidden'})
+                const newToken = generateAccessToken(data.userId)
+                const newRefreshToken = generateRefreshToken(data.userId)
+                res.cookie('refreshToken', newRefreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    maxAge: 1000 * 60 * 60 * 24 * 7,
+                })
+                return res.json({
+                    token: newToken,
+                })
+            })
+            
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    handleLogout: async(req, res) => {
+        try {
+            res.clearCookie("refreshToken")
+            return res.json({message: 'Logout sucesss', error: 0})
             
         } catch (error) {
             res.json({

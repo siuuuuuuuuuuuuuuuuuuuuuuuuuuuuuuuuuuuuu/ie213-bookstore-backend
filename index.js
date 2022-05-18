@@ -1,6 +1,7 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
+const cookieParser = require("cookie-parser");
 
 
 const app = express()
@@ -19,12 +20,12 @@ const corsOptions = {
   }
 app.use(cors(corsOptions))
 
-
 const connectMongoDB = require('./db')
 
 connectMongoDB()
 
 
+app.use(cookieParser());
 app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 

@@ -18,10 +18,10 @@ const authController = {
                 auth: OAuth2Client,
                 version: "v2",
             })
-            const result = await oAuth2.userinfo.get() 
+            const result = await oAuth2.userinfo.get()
 
             if (result.data) {
-                const  { verified_email, email, name, picture } = result.data
+                const  { verified_email, email, name, picture, id } = result.data
                 if (verified_email) {
                     const user = await User.findOne({email: email})
                     if (user) {
@@ -40,7 +40,14 @@ const authController = {
                         })
                     } else {
                         // Ngược lại, tạo mới 
-                        const newUser = new User({email, fullName: name, avatar: picture})
+                        const service = "Google"
+                        const newUser = new User({
+                            email, 
+                            fullName: name, 
+                            avatar: picture,
+                            service,
+                            serviceId: id
+                        })
                         const resultSave = await newUser.save()
                         const token = generateAccessToken(resultSave._id)
                         const refreshToken = generateRefreshToken(resultSave._id)
@@ -64,6 +71,54 @@ const authController = {
             }
               
             
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    loginWithFacebook: async(req, res) => {
+        try {
+            const  { email, name, avatar, id } = req.body
+            const user = await User.findOne({serviceId: id})
+            if (user) {
+                // TH đã có dữ liệu trong db 
+                const token = generateAccessToken(user._id)
+                const refreshToken = generateRefreshToken(user._id)
+                res.cookie('refreshToken', refreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    maxAge: 1000 * 60 * 60 * 24 * 7,
+                })
+                const { fullName, email, avatar } = user
+                return res.json({
+                    token,
+                    user: {fullName, email, avatar, userId: user._id}
+                })
+            } else {
+                // Ngược lại, tạo mới 
+                const service = "Facebook"
+                const newUser = new User({
+                    email, 
+                    fullName: name, 
+                    avatar,
+                    service,
+                    serviceId: id
+                })
+                const resultSave = await newUser.save()
+                const token = generateAccessToken(resultSave._id)
+                const refreshToken = generateRefreshToken(resultSave._id)
+                res.cookie('refreshToken', refreshToken, {
+                    httpOnly: true,
+                    secure: false,
+                    maxAge: 1000 * 60 * 60 * 24 * 7,
+                })
+                return res.json({
+                    token,
+                    user: {fullName: name, email, avatar, userId: resultSave._id}
+                })
+            }
         } catch (error) {
             res.json({
                 message: `Có lỗi xảy ra! ${error.message}`,

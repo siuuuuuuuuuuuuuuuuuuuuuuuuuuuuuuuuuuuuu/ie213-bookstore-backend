@@ -5,10 +5,11 @@ const Schema = mongoose.Schema
 const userSchema = new Schema({
     email: {
         type: String,
-        required: true,
         unique: true,
         lowercase: true
     },
+    service: { type: String }, // Google, Facebook
+    serviceId: { type: String }, //userId Google || Facebook
     fullName: {
         type: String,
         required: true

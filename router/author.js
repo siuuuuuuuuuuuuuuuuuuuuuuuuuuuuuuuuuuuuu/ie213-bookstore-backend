@@ -5,7 +5,7 @@ const authorController = require('../controller/authors.controller')
 const { verifyToken } = require('../middleware/auth')
 
 
-router.get('/', authorController.getAll)
+router.get('/', verifyToken, authorController.getAll)
 router.get('/:id', authorController.getById)
 router.post('/', authorController.create)
 router.put('/:id', authorController.updateById)

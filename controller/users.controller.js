@@ -32,17 +32,16 @@ const usersController = {
         // console.log('thong tin user req', req.user)
         try {
             const { id } = req.params
-           
             const data = await User.findById(id)
             if (data) {
-                res.status(200).json({
+                return res.status(200).json({
                     message: 'success',
                     error: 0,
                     data
                     
                 })
             } else {
-                res.status(200).json({
+                return res.status(200).json({
                     message: 'Không tìm thấy user!',
                     error: 1,
                     data: {}
@@ -164,12 +163,17 @@ const usersController = {
                     "address.$.address": address
                 }
             })
-            return res.status(200).json({
-                message: 'success',
-                error: 0,
-                data: result
+            if (result.modifiedCount === 1) {
+                return res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data: result
+                })
+            }
+            res.status(400).json({
+                message: `Không tìm thấy!`,
+                error: 1,
             })
-           
             
         } catch (error) {
             res.status(400).json({
@@ -193,12 +197,17 @@ const usersController = {
                     "address.$.isDefault": true
                 }
             })
-            return res.status(200).json({
-                message: 'success',
-                error: 0,
-                data: result
+            if (result.modifiedCount === 1) {
+                return res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data: result
+                })
+            }
+            res.status(400).json({
+                message: `Không tìm thấy!`,
+                error: 1,
             })
-            
             
         } catch (error) {
             res.status(400).json({
@@ -213,13 +222,17 @@ const usersController = {
             const result = await User.updateOne({_id: id, "address._id": addressId}, {
                 $pull: { address: {_id: addressId} }
             })
-            
-            return res.status(200).json({
-                message: 'success',
-                error: 0,
-                data: result
+            if (result.modifiedCount === 1) {
+                return res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data: result
+                })
+            }
+            res.status(400).json({
+                message: `Không tìm thấy!`,
+                error: 1,
             })
-            
             
         } catch (error) {
             res.status(400).json({

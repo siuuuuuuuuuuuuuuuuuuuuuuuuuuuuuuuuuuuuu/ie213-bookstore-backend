@@ -43,6 +43,30 @@ const genreController = {
             })
         }
     },
+    getBySlug: async(req, res) => {
+        try {
+            const { slug } = req.params
+            const data = await Genre.findOne({slug})
+            if (data) {
+                res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data,
+                })
+            } else {
+                res.status(200).json({
+                    message: 'Không tìm thấy thể loại!',
+                    error: 1,
+                    data: {}
+                })
+            }
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
     create: async(req, res) => {
         try {
             const { name } = req.body

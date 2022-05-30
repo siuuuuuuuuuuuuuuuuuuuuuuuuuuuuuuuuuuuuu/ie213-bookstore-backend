@@ -1,34 +1,41 @@
 const Book = require('../model/books.model')
 
 
-const authorController = {
+const bookController = {
     getAll: async(req, res) => {
         try {
             const page = req.query.page ? parseInt(req.query.page) : 1
             const limit = req.query.limit ? parseInt(req.query.limit) : 2
+            const sortByPrice = req.query.sortByPrice 
+            const sortByDate = req.query.sortByDate
             const skip = (page - 1) * limit
-            // let query = {}
-            // if (req.query.author) {
-            //     query.author = { $in: req.query.author }
-            // }
+            const { genre } = req.query
 
-            const data = await Book.find({})
+            let query = {}
+            if (genre) query.genre = { $in : genre}
+            let sort = {}
+
+            if (sortByPrice) sort.price = sortByPrice === "asc" ? 1 : -1
+            if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
+
+            const data = await Book.find(query)
             .populate('genre')
             .populate('author')
             .populate('publisher')
-            .skip(skip).limit(limit)
+            .skip(skip).limit(limit).sort(sort)
+
+            const count = await Book.countDocuments(query)
              
-            const count = await Book.countDocuments({})
             const totalPage = Math.ceil(count / limit)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                count,
-                totalPage,
                 data,
+                count,
                 pagination: {
                     page,
-                    limit
+                    limit,
+                    totalPage,
                 }
             })
         } catch (error) {
@@ -40,9 +47,9 @@ const authorController = {
     },
     getById: async(req, res) => {
         try {
-            const { id } = req.params
+            const { bookId } = req.params
            
-            const data = await Book.findOne({bookId: id})
+            const data = await Book.findOne({bookId: bookId})
             .populate('author')
             .populate('publisher')
             .populate('genre')
@@ -141,4 +148,4 @@ const authorController = {
     }
 }
 
-module.exports = authorController
+module.exports = bookController

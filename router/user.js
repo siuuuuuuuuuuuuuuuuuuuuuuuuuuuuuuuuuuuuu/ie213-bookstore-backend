@@ -2,21 +2,23 @@ const express = require('express')
 const router = express.Router()
 
 const userController = require('../controller/users.controller')
+const { verifyToken, verifyUser } = require('../middleware/auth')
+
 
 
 router.get('/', userController.getAll)
-router.get('/:id', userController.getById)
-router.get('/:id/address', userController.getAddressById)
+router.get('/:id', verifyToken, verifyUser, userController.getById)
+router.get('/:id/address', verifyToken, verifyUser, userController.getAddressById)
 
-router.post('/:id/address', userController.createAddressById)
-router.patch('/:id/address/status/:addressId', userController.updateDefaultAddressById)
-router.patch('/:id/address/:addressId', userController.updateAddressById)
+router.post('/:id/address', verifyToken, verifyUser, userController.createAddressById)
+router.patch('/:id/address/status/:addressId', verifyToken, verifyUser, userController.updateDefaultAddressById)
+router.patch('/:id/address/:addressId', verifyToken, verifyUser, userController.updateAddressById)
 
-router.put('/:id', userController.updateProfileById)
+router.put('/:id', verifyToken, verifyUser, userController.updateProfileById)
 
 
-router.delete('/:id', userController.deleteById)
-router.delete('/:id/address/:addressId', userController.deleteAddressById)
+router.delete('/:id', verifyToken, verifyUser, userController.deleteById)
+router.delete('/:id/address/:addressId', verifyToken, verifyUser, userController.deleteAddressById)
 
 
 

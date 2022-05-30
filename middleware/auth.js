@@ -11,7 +11,6 @@ const verifyToken = (req, res, next) => {
     jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET, async (err, data) => {
         if (err) return res.status(403).json({message: '403 Forbidden'})
         const user = await User.findById(data.userId)
-        // console.log(user)
         req.user = {userId: data.userId, role: user.role}
         next()
     })
@@ -25,11 +24,28 @@ const authorization = (permissions) => {
     }
 }
 
+const verifyUser = (req, res, next) => {
+    try {
+        const { id } = req.params
+        const { role, userId } = req.user
+        if (role > 0 || id === userId) {
+            next()
+        } else {
+            return res.json({message: '403 Forbidden'})
+        }
+    } catch (error) {
+        return res.json({message: '403 Forbidden'})
+    }
+}
+
 const isAdmin = (req, res, next) => {
     const { role } = req.user
-    if (role > 2) next()
-    return res.status(403).json({message: '403 Forbidden'})
+    if (role > 0) {
+        next()
+    } else {
+        return res.status(403).json({message: '403 Forbidden'})
+    }
 }
 
 
-module.exports = { verifyToken, authorization, isAdmin }
+module.exports = { verifyToken, authorization, verifyUser, isAdmin }

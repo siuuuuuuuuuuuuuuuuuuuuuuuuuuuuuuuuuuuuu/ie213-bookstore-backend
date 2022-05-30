@@ -36,10 +36,10 @@ const authController = {
                             secure: false,
                             maxAge: 1000 * 60 * 60 * 24 * 7,
                         })
-                        const { fullName, email, avatar } = user
+                        const { fullName, email, avatar, role } = user
                         return res.json({
                             token,
-                            user: {fullName, email, avatar, userId: user._id}
+                            user: {fullName, email, avatar, userId: user._id, role}
                         })
                     } else {
                         // Ngược lại, tạo mới 
@@ -61,7 +61,9 @@ const authController = {
                         })
                         return res.json({
                             token,
-                            user: {fullName: name, email, avatar: picture, userId: resultSave._id}
+                            user: {
+                                fullName: name, email, avatar: picture, 
+                                userId: resultSave._id, role: resultSave.role}
                         })
                     }
                 }
@@ -94,10 +96,10 @@ const authController = {
                     secure: false,
                     maxAge: 1000 * 60 * 60 * 24 * 7,
                 })
-                const { fullName, email, avatar } = user
+                const { fullName, email, avatar, role } = user
                 return res.json({
                     token,
-                    user: {fullName, email, avatar, userId: user._id}
+                    user: {fullName, email, avatar, userId: user._id, role}
                 })
             } else {
                 // Ngược lại, tạo mới 
@@ -119,7 +121,7 @@ const authController = {
                 })
                 return res.json({
                     token,
-                    user: {fullName: name, email, avatar, userId: resultSave._id}
+                    user: {fullName: name, email, avatar, userId: resultSave._id, role: resultSave.role}
                 })
             }
         } catch (error) {
@@ -236,10 +238,10 @@ const authController = {
                 secure: false,
                 maxAge: 1000 * 60 * 60 * 24 * 7,
             })
-            const { fullName, avatar } = user
+            const { fullName, avatar, role } = user
             return res.json({
                 token,
-                user: {fullName, email, avatar, userId: user._id}
+                user: {fullName, email, avatar, userId: user._id, role}
             })
             
         } catch (error) {
@@ -345,7 +347,7 @@ const authController = {
             const refreshToken = req.cookies.refreshToken
             if (!refreshToken) return res.status(401).json({message: '401 Unauthorized'})
             jwt.verify(refreshToken, process.env.JWT_REFRESH_TOKEN_SECRET, (err, data) => {
-                if (err) return res.status(403).json({message: '401 Forbidden'})
+                if (err) return res.status(403).json({message: '403 Forbidden'})
                 const newToken = generateAccessToken(data.userId)
                 const newRefreshToken = generateRefreshToken(data.userId)
                 res.cookie('refreshToken', newRefreshToken, {

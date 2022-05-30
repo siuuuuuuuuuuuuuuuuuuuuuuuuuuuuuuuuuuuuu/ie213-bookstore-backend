@@ -1,4 +1,5 @@
 const Book = require('../model/books.model')
+const { cloudinary, deleteCloudinary } = require('../services/cloudinary')
 
 
 const bookController = {
@@ -45,7 +46,7 @@ const bookController = {
             })
         }
     },
-    getById: async(req, res) => {
+    getByBookId: async(req, res) => {
         try {
             const { bookId } = req.params
            
@@ -73,12 +74,40 @@ const bookController = {
             })
         }
     },
+    getById: async(req, res) => {
+        try {
+            const { id } = req.params
+           
+            const data = await Book.findById(id)
+            .populate('author')
+            .populate('publisher')
+            .populate('genre')
+            if (data) {
+                res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: 'Không tìm thấy sách!',
+                    error: 1,
+                    data: {}
+                })
+            }
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
     create: async(req, res) => {
         try {
             const { bookId, name, year, genre, 
-                author, publisher, pages, size, price, discount, imageUrl } = req.body
+                author, publisher, pages, size, price, discount, imageUrl, publicId } = req.body
             const newBook = new Book({bookId, name, year, genre, 
-                author, publisher, pages, size, price, discount, imageUrl})
+                author, publisher, pages, size, price, discount, imageUrl, publicId})
             const result = await newBook.save()
             res.status(200).json({
                 message: 'success',
@@ -94,12 +123,27 @@ const bookController = {
     },
     updateById: async(req, res) => {
         try {
-            const { name, year, genre, 
-                author, publisher, pages, size, price, discount, imageUrl } = req.body
             const { id } = req.params
-            const result = await Book.findOneAndUpdate({authorId: id}, {
-                name, year, genre, author, publisher, pages, size, price, discount, imageUrl
-            }, {new: true})
+            const { name, year, genre, 
+                author, publisher, pages, size, price, discount, imageUrl, publicId } = req.body
+            let result = {}
+            if (imageUrl && publicId) {
+                const bookUpdate = await Book.findById(id)
+                const publicIdDelete = bookUpdate.publicId
+                if (publicIdDelete) {
+                    const resultCloudinary = await deleteCloudinary(cloudinary, publicIdDelete)
+                    console.log(resultCloudinary)
+
+                }
+                result = await Book.findByIdAndUpdate(id, {
+                    name, year, genre, author, publisher, pages, size, price, discount, imageUrl, publicId
+                }, {new: true})
+            } else {
+                result = await Book.findByIdAndUpdate(id, {
+                    name, year, genre, author, publisher, pages, size, price, discount
+                }, {new: true})
+            }
+         
             if (result) {
                 return res.status(200).json({
                     message: 'success',

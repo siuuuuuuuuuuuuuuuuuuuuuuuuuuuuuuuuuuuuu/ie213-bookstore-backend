@@ -168,8 +168,12 @@ const bookController = {
     deleteById: async(req, res) => {
         try {
             const { id } = req.params
-            const result = await Book.findOneAndDelete({bookId: id})
+            const result = await Book.findByIdAndDelete(id)
             if (result) {
+                const publicIdDelete = result.publicId
+                const resultCloudinary = await deleteCloudinary(cloudinary, publicIdDelete)
+                console.log(resultCloudinary)
+
                 return res.status(200).json({
                     message: 'success',
                     error: 0,

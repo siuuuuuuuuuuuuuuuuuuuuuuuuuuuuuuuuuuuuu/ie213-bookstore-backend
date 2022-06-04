@@ -34,6 +34,7 @@ const bookSchema = new Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Publisher'
     },
+    description: { type: String },
     pages: { type: Number },
     size: { type: String },
     price: { type: Number, required: true },

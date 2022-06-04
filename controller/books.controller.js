@@ -104,9 +104,9 @@ const bookController = {
     },
     create: async(req, res) => {
         try {
-            const { bookId, name, year, genre, 
-                author, publisher, pages, size, price, discount, imageUrl, publicId } = req.body
-            const newBook = new Book({bookId, name, year, genre, 
+            const { bookId, name, year, genre, author, publisher, description,
+                pages, size, price, discount, imageUrl, publicId } = req.body
+            const newBook = new Book({bookId, name, year, genre, description,
                 author, publisher, pages, size, price, discount, imageUrl, publicId})
             const result = await newBook.save()
             res.status(200).json({
@@ -124,8 +124,8 @@ const bookController = {
     updateById: async(req, res) => {
         try {
             const { id } = req.params
-            const { name, year, genre, 
-                author, publisher, pages, size, price, discount, imageUrl, publicId } = req.body
+            const { name, year, genre, author, publisher, description,
+                pages, size, price, discount, imageUrl, publicId } = req.body
             let result = {}
             if (imageUrl && publicId) {
                 const bookUpdate = await Book.findById(id)
@@ -136,11 +136,13 @@ const bookController = {
 
                 }
                 result = await Book.findByIdAndUpdate(id, {
-                    name, year, genre, author, publisher, pages, size, price, discount, imageUrl, publicId
+                    name, year, genre, author, publisher, description,
+                    pages, size, price, discount, imageUrl, publicId
                 }, {new: true})
             } else {
                 result = await Book.findByIdAndUpdate(id, {
-                    name, year, genre, author, publisher, pages, size, price, discount
+                    name, year, genre, author, publisher, description,
+                    pages, size, price, discount
                 }, {new: true})
             }
          

@@ -6,9 +6,14 @@ const authorController = {
         try {
             const page = req.query.page ? parseInt(req.query.page) : 1
             const limit = req.query.limit ? parseInt(req.query.limit) : 5
+            const sortByDate = req.query.sortByDate
+
+            let sort = {}
+            if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
+
             const skip = (page - 1) * limit
             const data = await Author.find({})
-            .skip(skip).limit(limit)
+            .skip(skip).limit(limit).sort(sort)
 
             const count = await Author.countDocuments({})
             const totalPage = Math.ceil(count / limit)
@@ -16,11 +21,11 @@ const authorController = {
                 message: 'success',
                 error: 0,
                 count,
-                totalPage,
                 data,
                 pagination: {
                     page,
-                    limit
+                    limit,
+                    totalPage,
                 }
             })
         } catch (error) {

@@ -22,10 +22,10 @@ const bookSchema = new Schema({
         unique: true
     },
     year: { type: Number },
-    genre: [{
+    genre: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Genre'
-    }],
+    },
     author: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Author'

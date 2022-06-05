@@ -116,9 +116,10 @@ const genreController = {
         try {
             const { id } = req.params
             // Khi xóa 1 thể loại => Cần xóa thông tin genre ra khỏi field genre của books
-            await Book.updateMany({ genre: id }, {
-                $pull: { genre: id }
-            })
+            await Book.updateMany({genre: id }, { genre: null})
+            // await Book.updateMany({ genre: id }, {
+            //     $pull: { genre: id }
+            // })
             const result = await Genre.findByIdAndDelete(id)
             if (result) {
                 return res.status(200).json({

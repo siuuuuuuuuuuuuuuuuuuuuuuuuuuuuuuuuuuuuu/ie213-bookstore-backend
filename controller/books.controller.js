@@ -1,7 +1,6 @@
 const Book = require('../model/books.model')
 const { cloudinary, deleteCloudinary } = require('../services/cloudinary')
 
-
 const bookController = {
     getAll: async(req, res) => {
         try {
@@ -93,6 +92,77 @@ const bookController = {
                     message: 'Không tìm thấy sách!',
                     error: 1,
                     data: {}
+                })
+            }
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    getBySlug: async(req, res) => {
+        try {
+            const { slug } = req.params
+           
+            const data = await Book.findOne({slug})
+            .populate('author')
+            .populate('publisher')
+            .populate('genre')
+            if (data) {
+                res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: 'Không tìm thấy sách!',
+                    error: 1,
+                    data: {}
+                })
+            }
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    searchBook: async(req, res) => {
+        try {
+            const { key } = req.query
+
+            const data = await Book.aggregate([
+                {
+                    $lookup: {
+                        from: "authors",
+                        localField: "author",
+                        foreignField: "_id",
+                        as: "author"
+                    }
+                },
+                { 
+                    $match: {
+                        $or: [
+                            { name: { $regex: key, $options:"$i" } }, 
+                            { "author.name": { $regex: key, $options:"$i" } } 
+                        ]
+                    }
+                }
+            ])
+      
+            if (data) {
+                res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: 'Không tìm thấy sách!',
+                    error: 1,
+                    data: []
                 })
             }
         } catch (error) {

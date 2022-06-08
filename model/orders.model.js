@@ -5,7 +5,8 @@ const Schema = mongoose.Schema
 const orderSchema = new Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        default: null
     },
     products: [{
         product: { type: mongoose.Schema.Types.ObjectId, ref: 'Book', require: true },
@@ -14,13 +15,18 @@ const orderSchema = new Schema({
         totalItem: { type: Number }
     }],
     address: { type: String, required: true },
+    email: { type: String },
     fullName: { type: String, required: true },
     phoneNumber: { type: String, required: true },
-    total: { type: Number, required: true },
+    cost: { 
+        subTotal: { type: Number },
+        discount: { type: Number },
+        total: { type: Number },
+     },
     status: {
         key: { type: Number, default: 0},
         text: { type: String, default: 'Đang chờ xử lý' }
-        // 0: Đang chờ xử lý, 1: Đã nhận được đơn hàng, 3: Đang vận chuyển, 4: Đã giao hàng
+        // 0: Đang chờ xử lý, 1: Đã đóng gói đơn hàng, 2: Đang vận chuyển, 3: Đã giao hàng
     }
   
 }, {

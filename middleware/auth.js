@@ -26,7 +26,7 @@ const authorization = (permissions) => {
 
 const verifyUser = (req, res, next) => {
     try {
-        const { id } = req.params
+        const id = req.params.userId || req.query.userId
         const { role, userId } = req.user
         if (role > 0 || id === userId) {
             next()

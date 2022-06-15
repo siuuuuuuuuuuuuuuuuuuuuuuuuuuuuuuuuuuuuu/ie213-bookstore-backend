@@ -31,8 +31,8 @@ const usersController = {
     getById: async(req, res) => {
         // console.log('thong tin user req', req.user)
         try {
-            const { id } = req.params
-            const data = await User.findById(id)
+            const { userId } = req.params
+            const data = await User.findById(userId)
             if (data) {
                 return res.status(200).json({
                     message: 'success',
@@ -56,9 +56,9 @@ const usersController = {
     },
     getAddressById: async(req, res) => {
         try {
-            const { id } = req.params
+            const { userId } = req.params
            
-            const data = await User.findById(id).select({"address": 1})
+            const data = await User.findById(userId).select({"address": 1})
             if (data) {
                 res.status(200).json({
                     message: 'success',
@@ -101,10 +101,10 @@ const usersController = {
     createAddressById: async(req, res) => {
         try {
             const { address } = req.body
-            const { id } = req.params
+            const { userId } = req.params
             const addressId = mongoose.Types.ObjectId()
         
-            const result = await User.updateOne({_id: id}, {
+            const result = await User.updateOne({_id: userId}, {
                $push: {
                    address: {address: address, _id: addressId}
                }
@@ -129,8 +129,8 @@ const usersController = {
     updateProfileById: async(req, res) => {
         try {
             const { fullName, gender, birthday, phoneNumber } = req.body
-            const { id } = req.params
-            const result = await User.findByIdAndUpdate(id, {
+            const { userId } = req.params
+            const result = await User.findByIdAndUpdate(userId, {
                 fullName, gender, birthday, phoneNumber
             }, {new: true})
             if (result) {
@@ -141,7 +141,7 @@ const usersController = {
                 })
             } else {
                 return res.status(400).json({
-                    message: `Không tìm thấy user có id:${id}`,
+                    message: `Không tìm thấy user có id:${userId}`,
                     error: 1,
                     data: result
                 })
@@ -157,8 +157,8 @@ const usersController = {
     updateAddressById: async(req, res) => {
         try {
             const { address } = req.body
-            const { id, addressId } = req.params
-            const result = await User.updateOne({_id: id, "address._id": addressId}, {
+            const { userId, addressId } = req.params
+            const result = await User.updateOne({_id: userId, "address._id": addressId}, {
                 $set: {
                     "address.$.address": address
                 }
@@ -184,15 +184,15 @@ const usersController = {
     },
     updateDefaultAddressById: async(req, res) => {
         try {
-            const { id, addressId } = req.params
+            const { userId, addressId } = req.params
             // Trước khi update address mặc định mới, => tìm address có isDefault = true,
             // set lại bằng false
-            const reset = await User.updateOne({_id: id, "address.isDefault": true}, {
+            const reset = await User.updateOne({_id: userId, "address.isDefault": true}, {
                 $set: {
                     "address.$.isDefault": false
                 }
             }) 
-            const result = await User.updateOne({_id: id, "address._id": addressId}, {
+            const result = await User.updateOne({_id: userId, "address._id": addressId}, {
                 $set: {
                     "address.$.isDefault": true
                 }
@@ -218,8 +218,8 @@ const usersController = {
     },
     deleteAddressById: async(req, res) => {
         try {
-            const { id, addressId } = req.params
-            const result = await User.updateOne({_id: id, "address._id": addressId}, {
+            const { userId, addressId } = req.params
+            const result = await User.updateOne({_id: userId, "address._id": addressId}, {
                 $pull: { address: {_id: addressId} }
             })
             if (result.modifiedCount === 1) {
@@ -243,8 +243,8 @@ const usersController = {
     },
     deleteById: async(req, res) => {
         try {
-            const { id } = req.params
-            const result = await User.findByIdAndDelete(id)
+            const { userId } = req.params
+            const result = await User.findByIdAndDelete(userId)
             if (result) {
                 return res.status(200).json({
                     message: 'success',
@@ -253,7 +253,7 @@ const usersController = {
                 })
             } else {
                 return res.status(400).json({
-                    message: `Không tìm thấy user có id:${id}`,
+                    message: `Không tìm thấy user có id:${userId}`,
                     error: 1,
                     data: result
                 })

@@ -18,6 +18,7 @@ const orderSchema = new Schema({
     email: { type: String },
     fullName: { type: String, required: true },
     phoneNumber: { type: String, required: true },
+    voucher: { type: String },
     cost: { 
         subTotal: { type: Number },
         discount: { type: Number },

@@ -1,4 +1,6 @@
 const Book = require('../model/books.model')
+const Order = require('../model/orders.model')
+const mongoose = require("mongoose");
 const { cloudinary, deleteCloudinary } = require('../services/cloudinary')
 
 const bookController = {
@@ -9,10 +11,12 @@ const bookController = {
             const sortByPrice = req.query.sortByPrice 
             const sortByDate = req.query.sortByDate
             const skip = (page - 1) * limit
-            const { genre } = req.query
+            const { genre, key } = req.query
 
             let query = {}
             if (genre) query.genre = { $in : genre}
+            if (key) query.name = { $regex: key, $options:"$i" }
+
             let sort = {}
 
             if (sortByPrice) sort.price = sortByPrice === "asc" ? 1 : -1
@@ -120,6 +124,39 @@ const bookController = {
                     message: 'Không tìm thấy sách!',
                     error: 1,
                     data: {}
+                })
+            }
+        } catch (error) {
+            res.json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
+    checkIsOrdered: async(req, res) => {
+        try {
+            const ObjectId = mongoose.Types.ObjectId;
+            const { bookId } = req.params
+            const data = await Order.aggregate([
+                { $unwind: "$products" },
+                {
+                    $group: {
+                        _id: "$products.product", 
+                    }
+                },
+                { $match : { _id : ObjectId(bookId) } }
+            ])
+            if (data) {
+                res.status(200).json({
+                    message: 'success',
+                    error: 0,
+                    data
+                })
+            } else {
+                res.status(200).json({
+                    message: 'Không tìm thấy!',
+                    error: 1,
+                    data: []
                 })
             }
         } catch (error) {

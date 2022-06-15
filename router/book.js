@@ -5,6 +5,7 @@ const bookController = require('../controller/books.controller')
 const { verifyToken, isAdmin } = require('../middleware/auth')
 
 router.get('/', bookController.getAll)
+router.get('/is-ordered/:bookId', bookController.checkIsOrdered)
 router.get('/search', bookController.searchBook)
 router.get('/bookId/:bookId', bookController.getByBookId)
 router.get('/slug/:slug', bookController.getBySlug)

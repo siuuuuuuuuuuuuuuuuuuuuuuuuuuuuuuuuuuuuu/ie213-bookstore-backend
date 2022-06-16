@@ -9,6 +9,7 @@ const authRouter = require('./auth')
 const orderRouter = require('./order')
 const voucherRouter = require('./voucher')
 const analyticRouter = require('./analytics')
+const feedbackRouter = require('./feedback')
 
 function routes(app) {
     
@@ -22,6 +23,8 @@ function routes(app) {
     app.use('/api/v1/orders', orderRouter)
     app.use('/api/v1/vouchers', voucherRouter)
     app.use('/api/v1/analytics', analyticRouter)
+
+    app.use('/api/v1/feedbacks', feedbackRouter)
 
     app.use('*', function(req, res) {
         res.status(404).json({

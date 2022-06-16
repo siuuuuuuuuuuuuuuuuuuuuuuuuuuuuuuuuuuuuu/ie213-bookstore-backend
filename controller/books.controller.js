@@ -169,7 +169,9 @@ const bookController = {
     searchBook: async(req, res) => {
         try {
             const { key } = req.query
-
+            const page = req.query.page ? parseInt(req.query.page) : 1
+            const limit = req.query.limit ? parseInt(req.query.limit) : 0
+            const skip = (page - 1) * limit
             const data = await Book.aggregate([
                 {
                     $lookup: {
@@ -186,7 +188,9 @@ const bookController = {
                             { "author.name": { $regex: key, $options:"$i" } } 
                         ]
                     }
-                }
+                },
+                { $skip : skip },
+                { $limit: 5 },
             ])
       
             if (data) {

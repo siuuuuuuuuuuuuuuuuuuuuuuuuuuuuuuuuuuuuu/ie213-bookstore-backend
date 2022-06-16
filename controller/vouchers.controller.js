@@ -6,12 +6,16 @@ const voucherController = {
             const page = req.query.page ? parseInt(req.query.page) : 1
             const limit = req.query.limit ? parseInt(req.query.limit) : 5
             const sortByDate = req.query.sortByDate
+            const canUse = req.query.canUse
+
             let sort = {}
+            let query = {}
             if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
+            if (canUse) query["$expr"] = { $lt: [ "$used_quantity" , "$quantity" ] } 
             const skip = (page - 1) * limit
 
-            const data = await Voucher.find({}).skip(skip).limit(limit).sort(sort)
-            const count = await Voucher.countDocuments({})
+            const data = await Voucher.find(query).skip(skip).limit(limit).sort(sort)
+            const count = await Voucher.countDocuments(query)
             const totalPage = Math.ceil(count / limit)
             res.status(200).json({
                 message: 'success',

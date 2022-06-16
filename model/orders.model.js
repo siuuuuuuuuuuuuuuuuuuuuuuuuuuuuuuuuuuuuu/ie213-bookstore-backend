@@ -19,6 +19,8 @@ const orderSchema = new Schema({
     fullName: { type: String, required: true },
     phoneNumber: { type: String, required: true },
     voucher: { type: String },
+    method: { type: Number, default: 0}, // 0: Thanh toán khi nhận hàng, 1: Paypal
+    isPaid: { type: Boolean, default: false}, // 0: Chưa thanh toán, 1: Đã thanh toán
     cost: { 
         subTotal: { type: Number },
         discount: { type: Number },

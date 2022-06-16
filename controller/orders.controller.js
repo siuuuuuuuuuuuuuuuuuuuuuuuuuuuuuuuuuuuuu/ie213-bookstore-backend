@@ -64,13 +64,22 @@ const orderController = {
     },
     create: async(req, res) => {
         try {
-            const { userId, email, address, fullName, phoneNumber, voucher, cost, cart } = req.body
-            const checkVoucher = await Voucher.findOne({code: voucher})
-            if (checkVoucher.used_quantity >= checkVoucher.quantity) {
-                return res.status(400).json({
-                    message: `Số lượng sử dụng voucher này đã hết!`,
-                    error: 1,
-                })
+            const { userId, email, address, fullName, phoneNumber, voucher, cost, cart, method } = req.body
+            if (voucher) {
+                const checkVoucher = await Voucher.findOne({code: voucher})
+                if (!checkVoucher) {
+                    return res.status(400).json({
+                        message: `Voucher này không tồn tại!`,
+                        error: 1,
+                    })
+                }
+                  
+                if (checkVoucher.used_quantity >= checkVoucher.quantity) {
+                    return res.status(400).json({
+                        message: `Số lượng sử dụng voucher này đã hết!`,
+                        error: 1,
+                    })
+                }
             }
             const products = cart.map((product) => {
                 return {
@@ -82,7 +91,7 @@ const orderController = {
             })
             const newOrder = new Order({
                 user: userId ? userId : null, 
-                email, fullName, address, phoneNumber, voucher, cost, products,
+                email, fullName, address, phoneNumber, voucher, cost, products, method
             })
             const result = await newOrder.save()
             await Voucher.updateOne(
@@ -101,14 +110,41 @@ const orderController = {
             })
         }
     },
+    updatePaymentStatusById: async(req, res) => {
+        try {
+            const { id } = req.params
+            const { paymentStatus } = req.body
+
+            const result = await Order.findByIdAndUpdate(id,  {
+                isPaid: paymentStatus
+            }, {new: true})
+            res.status(200).json({
+                message: 'success',
+                error: 0,
+                data: result
+            })
+        } catch (error) {
+            res.status(400).json({
+                message: `Có lỗi xảy ra! ${error.message}`,
+                error: 1,
+            })
+        }
+    },
     updateStatusById: async(req, res) => {
         try {
             const { id } = req.params
             const { key, text } = req.body
            
-            
+            const order = await Order.findById(id)
+            let paymentStatus = order.isPaid
+
+            if (order.method === 0) {
+                paymentStatus = key === 3 ? true : false
+            }
+
             const result = await Order.findByIdAndUpdate(id,  {
-                status: { key, text }
+                status: { key, text },
+                isPaid: paymentStatus
             }, {new: true})
             res.status(200).json({
                 message: 'success',

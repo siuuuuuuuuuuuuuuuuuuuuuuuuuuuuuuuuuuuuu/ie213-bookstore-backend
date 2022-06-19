@@ -11,7 +11,7 @@ const verifyToken = (req, res, next) => {
     jwt.verify(token, process.env.JWT_ACCESS_TOKEN_SECRET, async (err, data) => {
         if (err) return res.status(403).json({message: '403 Forbidden'})
         const user = await User.findById(data.userId)
-        req.user = {userId: data.userId, role: user.role}
+        req.user = {userId: data.userId, role: user?.role || 0}
         next()
     })
 }

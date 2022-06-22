@@ -85,7 +85,7 @@ const authController = {
     },
     loginWithFacebook: async(req, res) => {
         try {
-            const  { email, name, avatar, id } = req.body
+            const { email, name, avatar, id } = req.body
             const user = await User.findOne({serviceId: id})
             if (user) {
                 // TH đã có dữ liệu trong db 

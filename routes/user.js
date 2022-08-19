@@ -2,8 +2,7 @@ const express = require('express')
 const router = express.Router()
 
 const userController = require('../controller/users.controller')
-const { verifyToken, verifyUser } = require('../middleware/auth')
-
+const { verifyToken, verifyUser, isAdmin } = require('../middleware/auth')
 
 
 router.get('/', userController.getAll)
@@ -18,9 +17,7 @@ router.put('/:userId', verifyToken, verifyUser, userController.updateProfileById
 
 
 router.delete('/:userId', verifyToken, verifyUser, userController.deleteById)
-router.delete('/:userId/address/:addressId', verifyToken, verifyUser, userController.deleteAddressById)
-
-
+router.delete('/:userId/address/:addressId', verifyToken, isAdmin, userController.deleteAddressById)
 
 
 module.exports = router;

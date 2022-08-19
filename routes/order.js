@@ -9,6 +9,6 @@ router.get('/:id', verifyToken, verifyUser, orderController.getById)
 router.post('/', orderController.create)
 router.put('/:id/payment-status', orderController.updatePaymentStatusById)
 router.put('/:id/status', verifyToken, isAdmin, orderController.updateStatusById)
-router.delete('/:id', orderController.deleteById)
+// router.delete('/:id', orderController.deleteById)
 
 module.exports = router;

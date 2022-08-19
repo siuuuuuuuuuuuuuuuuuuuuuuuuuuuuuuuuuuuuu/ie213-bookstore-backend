@@ -1,4 +1,4 @@
-const Voucher = require('../model/vouchers.model')
+const voucherService = require('../services/vouchers.service')
 
 const voucherController = {
     getAll: async(req, res) => {
@@ -12,11 +12,9 @@ const voucherController = {
             let query = {}
             if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
             if (canUse) query["$expr"] = { $lt: [ "$used_quantity" , "$quantity" ] } 
-            const skip = (page - 1) * limit
 
-            const data = await Voucher.find(query).skip(skip).limit(limit).sort(sort)
-            const count = await Voucher.countDocuments(query)
-            const totalPage = Math.ceil(count / limit)
+            const { data, count, totalPage } = await voucherService.getAll({query, page, limit, sort})
+
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -38,7 +36,7 @@ const voucherController = {
     getById: async(req, res) => {
         try {
             const { id } = req.params
-            const data = await Voucher.findById(id)
+            const { data } = await voucherService.getById(id)
             if (data) {
                 res.status(200).json({
                     message: 'success',
@@ -49,7 +47,7 @@ const voucherController = {
                 res.status(200).json({
                     message: 'Không tìm thấy!',
                     error: 1,
-                    data: {}
+                    data
                 })
             }
         } catch (error) {
@@ -62,7 +60,7 @@ const voucherController = {
     getByCode: async(req, res) => {
         try {
             const { code } = req.params
-            const data = await Voucher.findOne({code: code})
+            const { data } = await voucherService.getByCode(code)
             if (data) {
                 res.status(200).json({
                     message: 'success',
@@ -73,7 +71,7 @@ const voucherController = {
                 res.status(200).json({
                     message: 'Không tìm thấy!',
                     error: 1,
-                    data: {}
+                    data
                 })
             }
         } catch (error) {
@@ -85,13 +83,11 @@ const voucherController = {
     },
     create: async(req, res) => {
         try {
-            const { price_request, code, discount, quantity } = req.body
-            const newVoucher = new Voucher({price_request, code, discount, quantity})
-            const result = await newVoucher.save()
+            const { data } = await voucherService.create(req.body)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({
@@ -102,22 +98,19 @@ const voucherController = {
     },
     updateById: async(req, res) => {
         try {
-            const { price_request, discount, quantity } = req.body
             const { id } = req.params
-            const result = await Voucher.findByIdAndUpdate(id, {
-                price_request, discount, quantity
-            }, {new: true})
-            if (result) {
+            const { data } = await voucherService.updateById(id, req.body)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
                     message: `Không tìm thấy id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             
@@ -131,18 +124,18 @@ const voucherController = {
     deleteById: async(req, res) => {
         try {
             const { id } = req.params
-            const result = await Voucher.findByIdAndDelete(id)
-            if (result) {
+            const { data } = await voucherService.deleteById(id)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
-                    message: `Không tìm thấy thể loại có id:${id}`,
+                    message: `Không tìm có id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             

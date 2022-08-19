@@ -1,22 +1,17 @@
-const Author = require('../model/authors.model')
-const Book = require('../model/books.model')
+const authorService = require('../services/authors.service')
 
 const authorController = {
     getAll: async(req, res) => {
         try {
             const page = req.query.page ? parseInt(req.query.page) : 1
-            const limit = req.query.limit ? parseInt(req.query.limit) : 5
+            const limit = req.query.limit ? parseInt(req.query.limit) : 0
             const sortByDate = req.query.sortByDate
 
             let sort = {}
             if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
 
-            const skip = (page - 1) * limit
-            const data = await Author.find({})
-            .skip(skip).limit(limit).sort(sort)
+            const { data, count, totalPage } = await authorService.getAll({page, limit, sort})
 
-            const count = await Author.countDocuments({})
-            const totalPage = Math.ceil(count / limit)
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -38,24 +33,19 @@ const authorController = {
     getById: async(req, res) => {
         try {
             const { id } = req.params
-           
-            const data = await Author.findById(id)
-            const books = await Book.find({author: {$in: id}})
+            const { data } = await authorService.getById(id)
+
             if (data) {
                 res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: {
-                        author: data,
-                        books,
-                    }
-                    
+                    data
                 })
             } else {
                 res.status(200).json({
                     message: 'Không tìm thấy tác giả!',
                     error: 1,
-                    data: {}
+                    data: null
                 })
             }
         } catch (error) {
@@ -67,13 +57,11 @@ const authorController = {
     },
     create: async(req, res) => {
         try {
-            const { name, year } = req.body
-            const newAuthor = new Author({name, year})
-            const result = await newAuthor.save()
+            const { data } = await authorService.create(req.body)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({
@@ -84,23 +72,19 @@ const authorController = {
     },
     updateById: async(req, res) => {
         try {
-            const { name, year } = req.body
             const { id } = req.params
-            const result = await Author.findByIdAndUpdate(id, {
-                name: name,
-                year: year
-            }, {new: true})
-            if (result) {
+            const { data } = await authorService.updateById(id, req.body)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
                     message: `Không tìm thấy tác giả có id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             
@@ -114,20 +98,18 @@ const authorController = {
     deleteById: async(req, res) => {
         try {
             const { id } = req.params
-            // Khi xóa 1 tác giả => Cần update lại các sách có tác giả cần xóa = null
-            await Book.updateMany({author: id }, { author: null})
-            const result = await Author.findByIdAndDelete(id)
-            if (result) {
+            const { data } = await authorService.deleteById(id)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
                     message: `Không tìm thấy tác giả có id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             

@@ -1,5 +1,5 @@
-const Order = require('../model/orders.model')
-const Voucher = require('../model/vouchers.model')
+const orderService = require('../services/orders.service')
+const voucherService = require('../services/vouchers.service')
 
 const orderController = {
     getAll: async(req, res) => {
@@ -8,17 +8,14 @@ const orderController = {
             const limit = req.query.limit ? parseInt(req.query.limit) : 2
             const sortByDate = req.query.sortByDate
             const userId = req.query.userId
-            const skip = (page - 1) * limit
 
             let query = {}
             if (userId) query.user = { $in : userId}
 
             let sort = {}
             if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
-            const data = await Order.find(query).skip(skip).limit(limit).sort(sort)
-
-            const count = await Order.countDocuments(query)
-            const totalPage = Math.ceil(count / limit)
+          
+            const { data, count, totalPage } = await orderService.getAll({query, page, limit, sort})
 
             res.status(200).json({
                 message: 'success',
@@ -41,7 +38,7 @@ const orderController = {
     getById: async(req, res) => {
         try {
             const { id } = req.params
-            const data = await Order.findById(id).populate("user").populate("products.product")
+            const { data } = await orderService.getById(id)
             if (data) {
                 res.status(200).json({
                     message: 'success',
@@ -52,7 +49,7 @@ const orderController = {
                 res.status(200).json({
                     message: 'Không tìm thấy đơn hàng!',
                     error: 1,
-                    data: {}
+                    data
                 })
             }
         } catch (error) {
@@ -65,21 +62,22 @@ const orderController = {
     create: async(req, res) => {
         try {
             const { userId, email, address, fullName, phoneNumber, voucher, cost, cart, method } = req.body
+            let voucherId = ""
             if (voucher) {
-                const checkVoucher = await Voucher.findOne({code: voucher})
+                const { data: checkVoucher } = await voucherService.getByCode(voucher)
                 if (!checkVoucher) {
                     return res.status(400).json({
                         message: `Voucher này không tồn tại!`,
                         error: 1,
                     })
                 }
-                  
                 if (checkVoucher.used_quantity >= checkVoucher.quantity) {
                     return res.status(400).json({
                         message: `Số lượng sử dụng voucher này đã hết!`,
                         error: 1,
                     })
                 }
+                voucherId = checkVoucher._id
             }
             const products = cart.map((product) => {
                 return {
@@ -89,21 +87,19 @@ const orderController = {
                     totalItem: product.totalPriceItem
                 }
             })
-            const newOrder = new Order({
-                user: userId ? userId : null, 
-                email, fullName, address, phoneNumber, voucher, cost, products, method
+            const { data } = await orderService.create({
+                userId, email, fullName, address, phoneNumber, voucher, cost, products, method
             })
-            const result = await newOrder.save()
-            await Voucher.updateOne(
-                { code: voucher },
-                { $inc: { used_quantity: 1 } }
-            )
+
+            await voucherService.updateUsedQuantity(voucherId, 1)
+          
             return res.status(200).json({
                 message: 'success',
                 error: 0,
-                // data: result
+                data
             })
         } catch (error) {
+            console.log(error)
             res.status(400).json({
                 message: `Có lỗi xảy ra! ${error.message}`,
                 error: 1,
@@ -113,15 +109,11 @@ const orderController = {
     updatePaymentStatusById: async(req, res) => {
         try {
             const { id } = req.params
-            const { paymentStatus } = req.body
-
-            const result = await Order.findByIdAndUpdate(id,  {
-                isPaid: paymentStatus
-            }, {new: true})
+            const { data } = await orderService.updatePaymentStatusById(id, req.body)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({
@@ -135,21 +127,20 @@ const orderController = {
             const { id } = req.params
             const { key, text } = req.body
            
-            const order = await Order.findById(id)
+            const { data: order } = await orderService.getById(id)
             let paymentStatus = order.isPaid
 
             if (order.method === 0) {
                 paymentStatus = key === 3 ? true : false
             }
 
-            const result = await Order.findByIdAndUpdate(id,  {
-                status: { key, text },
-                isPaid: paymentStatus
-            }, {new: true})
+            const { data } = await orderService.updateStatusById(id, {
+                key, text, paymentStatus
+            })
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({
@@ -158,31 +149,31 @@ const orderController = {
             })
         }
     },
-    deleteById: async(req, res) => {
-        try {
-            const { id } = req.params
-            const result = await Order.findByIdAndDelete(id)
-            if (result) {
-                return res.status(200).json({
-                    message: 'success',
-                    error: 0,
-                    data: result
-                })
-            } else {
-                return res.status(400).json({
-                    message: `Không tìm thấy đơn hàng có id: ${id}`,
-                    error: 1,
-                    data: result
-                })
-            }
+    // deleteById: async(req, res) => {
+    //     try {
+    //         const { id } = req.params
+    //         const result = await Order.findByIdAndDelete(id)
+    //         if (result) {
+    //             return res.status(200).json({
+    //                 message: 'success',
+    //                 error: 0,
+    //                 data: result
+    //             })
+    //         } else {
+    //             return res.status(400).json({
+    //                 message: `Không tìm thấy đơn hàng có id: ${id}`,
+    //                 error: 1,
+    //                 data: result
+    //             })
+    //         }
             
-        } catch (error) {
-            res.status(400).json({
-                message: `Có lỗi xảy ra! ${error.message}`,
-                error: 1,
-            })
-        }
-    },
+    //     } catch (error) {
+    //         res.status(400).json({
+    //             message: `Có lỗi xảy ra! ${error.message}`,
+    //             error: 1,
+    //         })
+    //     }
+    // },
 }
 
 module.exports = orderController

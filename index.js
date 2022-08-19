@@ -1,11 +1,9 @@
 const express = require('express')
 const cors = require('cors')
 require('dotenv').config()
-const cookieParser = require("cookie-parser");
-
+const cookieParser = require('cookie-parser');
 
 const app = express()
-
 
 const whitelist = ['http://localhost:3000', process.env.REACT_APP_URL, process.env.REACT_APP_URL_1]
 const corsOptions = {
@@ -30,11 +28,12 @@ app.use(express.urlencoded({ extended: false }))
 app.use(express.json())
 
 
-const routes = require('./router')
+const routes = require('./routes')
 
 routes(app)
 
-const PORT = process.env.PORT || 3000
+const PORT = process.env.PORT || 5000
+
 
 app.listen(PORT, function() {
     console.log(`Server đang chạy PORT ${PORT}`)

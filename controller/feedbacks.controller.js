@@ -1,4 +1,4 @@
-const Feedback = require('../model/feedbacks.model')
+const feedbackService = require('../services/feedbacks.service')
 
 const feedbackController = {
     getAll: async(req, res) => {
@@ -10,12 +10,7 @@ const feedbackController = {
             let sort = {}
             if (sortByDate) sort.createdAt = sortByDate === "asc" ? 1 : -1
 
-            const skip = (page - 1) * limit
-            const data = await Feedback.find({})
-            .skip(skip).limit(limit).sort(sort)
-
-            const count = await Feedback.countDocuments({})
-            const totalPage = Math.ceil(count / limit)
+            const { data, count, totalPage } = await feedbackService.getAll({page, limit, sort})
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -36,13 +31,11 @@ const feedbackController = {
     },
     create: async(req, res) => {
         try {
-            const { name, email, content } = req.body
-            const newFeedback = new Feedback({ name, email, content})
-            const result = await newFeedback.save()
+            const { data } = await feedbackService.create(req.body)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({

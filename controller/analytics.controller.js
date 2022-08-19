@@ -1,16 +1,10 @@
 const Order = require('../model/orders.model')
+const orderService = require('../services/orders.service')
 
 const analyticsController = {
     getTotalRevenue: async(req, res) => {
         try {
-            const data = await Order.aggregate([
-                {
-                    $group: {
-                    _id: null,
-                    revenue: { $sum: "$cost.total" },
-                    },
-                },
-            ])
+            const { data } = await orderService.getTotalRevenue()
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -25,24 +19,7 @@ const analyticsController = {
     },
     getRevenueWeek: async(req, res) => {
         try {
-            const { start, end } = req.query
-            const data = await Order.aggregate([
-                {
-                    $match: {
-                        createdAt: {
-                        $gte: new Date(start),
-                        $lte: new Date(end),
-                      },
-                    },
-                },
-                {
-                    $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    revenue: { $sum: "$cost.total" },
-                    },
-                },
-                { $sort: { _id: 1 } },
-            ])
+            const { data } = await orderService.getRevenueWeek(req.query)
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -57,15 +34,7 @@ const analyticsController = {
     },
     getRevenueLifeTime: async(req, res) => {
         try {
-            const data = await Order.aggregate([
-                {
-                    $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    revenue: { $sum: "$cost.total" },
-                    },
-                },
-                { $sort: { _id: 1 } },
-            ])
+            const { data } = await orderService.getRevenueLifeTime()
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -80,15 +49,7 @@ const analyticsController = {
     },
     getCountOrderLifeTime: async(req, res) => {
         try {
-            const data = await Order.aggregate([
-                {
-                    $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    total: { $sum: 1 },
-                    },
-                },
-                { $sort: { _id: 1 } },
-            ])
+            const { data } = await orderService.getCountOrderLifeTime()
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -103,26 +64,7 @@ const analyticsController = {
     },
     getBestSeller: async(req, res) => {
         try {
-            const data = await Order.aggregate([
-                { $unwind: "$products" },
-                {
-                    $group: {
-                        _id: "$products.product", 
-                        count: { $sum: "$products.quantity" }
-                    }
-                },
-                {
-                    $lookup: {
-                        from: "books", 
-                        localField: "_id",
-                        foreignField: "_id",
-                        as: "product",
-                    },
-                },
-                { $sort: { count: -1 } },
-                { $limit: 5 },
-               
-            ])
+            const { data } = await orderService.getBestSeller()
             res.status(200).json({
                 message: 'success',
                 error: 0,

@@ -1,10 +1,9 @@
-const Publisher = require('../model/publishers.model')
-const Book = require('../model/books.model')
+const publisherService = require('../services/publishers.service')
 
 const publisherController = {
     getAll: async(req, res) => {
         try {
-            const data = await Publisher.find({})
+            const { data } = await publisherService.getAll({})
             res.status(200).json({
                 message: 'success',
                 error: 0,
@@ -20,7 +19,7 @@ const publisherController = {
     getById: async(req, res) => {
         try {
             const { id } = req.params
-            const data = await Publisher.findById(id)
+            const { data } = await publisherService.getById(id)
             if (data) {
                 res.status(200).json({
                     message: 'success',
@@ -31,7 +30,7 @@ const publisherController = {
                 res.status(200).json({
                     message: 'Không tìm thấy Nhà xuất bản!',
                     error: 1,
-                    data: {}
+                    data
                 })
             }
         } catch (error) {
@@ -43,13 +42,11 @@ const publisherController = {
     },
     create: async(req, res) => {
         try {
-            const { name } = req.body
-            const newPublisher = new Publisher({name})
-            const result = await newPublisher.save()
+            const { data } = await publisherService.create(req.body)
             res.status(200).json({
                 message: 'success',
                 error: 0,
-                data: result
+                data
             })
         } catch (error) {
             res.status(400).json({
@@ -60,22 +57,19 @@ const publisherController = {
     },
     updateById: async(req, res) => {
         try {
-            const { name } = req.body
             const { id } = req.params
-            const result = await Publisher.findByIdAndUpdate(id, {
-                name: name
-            }, {new: true})
-            if (result) {
+            const { data } = await publisherService.updateById(id, req.body)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
                     message: `Không tìm thấy NXB có id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             
@@ -89,20 +83,18 @@ const publisherController = {
     deleteById: async(req, res) => {
         try {
             const { id } = req.params
-            // Khi xóa 1 NXB=> Cần update lại các sách có NXB cần xóa = null
-            await Book.updateMany({publisher: id }, { publisher: null})
-            const result = await Publisher.findByIdAndDelete(id)
-            if (result) {
+            const { data } = await publisherService.deleteById(id)
+            if (data) {
                 return res.status(200).json({
                     message: 'success',
                     error: 0,
-                    data: result
+                    data
                 })
             } else {
                 return res.status(400).json({
                     message: `Không tìm thấy NXB có id:${id}`,
                     error: 1,
-                    data: result
+                    data
                 })
             }
             
